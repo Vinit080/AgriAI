@@ -111,8 +111,49 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FERTILIZER_MODEL_PATH = os.path.join(BASE_DIR, "npk_model.joblib")
 SEED_MODEL_PATH = os.path.join(BASE_DIR, "model.h5")
 DISEASE_MODEL_PATH = os.path.join(BASE_DIR, "disease_model.h5")
+SEED_CLASSES_PATH = os.path.join(BASE_DIR, "seed_class_names.json")
 STATIC_IMG_DIR = os.path.join(BASE_DIR, 'static', 'img')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+
+# Load seed class names (saved by train_seed.py). Maps class index → folder name.
+# Quality mapping: 'pure' → High, 'discolored'/'silkcut' → Average, 'broken' → Poor
+import json as _json
+SEED_CLASS_NAMES = []
+if os.path.exists(SEED_CLASSES_PATH):
+    with open(SEED_CLASSES_PATH) as _f:
+        SEED_CLASS_NAMES = _json.load(_f)
+    logger_tmp = logging.getLogger(__name__)
+    logger_tmp.info(f"Seed class names loaded: {SEED_CLASS_NAMES}")
+else:
+    # Fallback: alphabetical order from training (broken=0, discolored=1, pure=2, silkcut=3)
+    SEED_CLASS_NAMES = ['broken', 'discolored', 'pure', 'silkcut']
+
+DEFAULT_SEED_CLASSES = ['broken', 'discolored', 'pure', 'silkcut']
+
+def _interpret_seed_class(class_name: str):
+    """Map a seed class name to a human-friendly quality label and advice.
+    Handles both merged quality labels (High/Average/Poor) and raw folder names
+    (pure/discolored/silkcut/broken) for backwards compatibility.
+    """
+    name = class_name.lower()
+    if name in ('high', 'pure'):
+        return (
+            'High Quality (Pure & Highly Suitable)',
+            'The neural network detected uniform seed morphology, healthy coloring, and no structural defects.',
+            'These seeds possess extremely high germination viability. Ready for planting without any treatment.'
+        )
+    elif name in ('average', 'discolored', 'silkcut'):
+        return (
+            'Average Quality (Minor Defects Detected)',
+            'The seeds show minor morphological inconsistencies — slight discoloration or surface cuts — but core structure is intact.',
+            'These seeds are viable for planting. Consider seed priming or fungicide treatment before sowing to improve germination rates.'
+        )
+    else:  # 'poor', 'broken'
+        return (
+            'Poor Quality (Broken / Defective)',
+            'Visual analysis indicates severe structural damage — cracked or broken seed coats — which compromises germination potential.',
+            'Do NOT plant these seeds. Discard them immediately and replace with a fresh, certified seed lot.'
+        )
 
 # Fix #14: Named constants replacing magic numbers in the fertilizer optimizer
 # Fertilizer prices in INR/kg: [Urea, DAP, MOP]
@@ -595,32 +636,30 @@ def api_predict_seed():
         except ValueError:
             return jsonify({'error': 'Uploaded file is not a valid image.'}), 400
 
-        img = img.resize((64, 64))
+        img = img.resize((128, 128))
         if img.mode != 'RGB':
             img = img.convert('RGB')
-        img_array = np.array(img) / 255.0
-        img_array = img_array.reshape(1, 64, 64, 3)
+        img_array = np.array(img, dtype=np.float32)
+        img_array = img_array.reshape(1, 128, 128, 3)  # EfficientNetB0 expects [0,255]
 
         prediction = seed_model.predict(img_array)
         predicted_class = int(np.argmax(prediction))
-        quality_classes = [
-            'Poor Quality (Defective/Unsuitable)',
-            'Average Quality (Acceptable)',
-            'High Quality (Healthy & Highly Suitable)'
-        ]
-        result = quality_classes[predicted_class] if predicted_class < len(quality_classes) else "Unknown Quality"
         confidence = float(np.max(prediction)) * 100
-        gradcam_url = generate_gradcam(img_array, seed_model)
 
-        if predicted_class == 2:
-            reasoning = "The neural network detected uniform seed morphology and healthy coloring."
-            practices = "These seeds possess extremely high germination viability."
-        elif predicted_class == 1:
-            reasoning = "The seeds display acceptable morphology but may have minor inconsistencies."
-            practices = "These are viable for planting. Consider standard seed treatments."
+        # Get the actual class name and interpret it
+        if SEED_CLASS_NAMES and predicted_class < len(SEED_CLASS_NAMES):
+            raw_class = SEED_CLASS_NAMES[predicted_class]
         else:
-            reasoning = "Visual analysis indicates severe defects or physical damage."
-            practices = "Do NOT plant these seeds. Discard them immediately."
+            raw_class = ['Average', 'High', 'Poor'][predicted_class % 3]
+
+        result, reasoning, practices = _interpret_seed_class(raw_class)
+
+        # Flag low confidence so the UI can show a caution notice
+        low_confidence = confidence < 60.0
+        if low_confidence:
+            practices = "⚠️ Low confidence prediction — consider re-uploading a clearer, well-lit image of the seeds. " + practices
+
+        gradcam_url = generate_gradcam(img_array, seed_model)
 
         hist = PredictionHistory(current_user.id, 'Seed', 'Image Upload', result)
         db.session.add(hist)
@@ -631,7 +670,8 @@ def api_predict_seed():
             'confidence': confidence,
             'reasoning': reasoning,
             'practices': practices,
-            'gradcam_url': gradcam_url
+            'gradcam_url': gradcam_url,
+            'low_confidence': low_confidence,
         })
     except Exception as e:
         logger.error(f"Seed prediction error: {e}", exc_info=True)

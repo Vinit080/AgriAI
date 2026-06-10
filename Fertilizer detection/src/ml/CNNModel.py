@@ -8,7 +8,7 @@ def main():
     from keras.layers import Dense, Dropout
     from tensorflow.keras import optimizers
     
-    basepath="C:\Users\coolb\OneDrive\Desktop\Fertilizer detection and seed quality 100%code\Fertilizer detection and seed quality 100%code\Fertilizer detection and seed quality 100%code"
+    basepath=r"C:\Users\coolb\OneDrive\Desktop\Fertilizer detection and seed quality 100%code\Fertilizer detection and seed quality 100%code\Fertilizer detection and seed quality 100%code"
     
     # Initialing the CNN
     classifier = Sequential()

@@ -1,83 +1,108 @@
-# AgriAI — Precision Agriculture ML Platform
+<div align="center">
+  <img src="https://raw.githubusercontent.com/Vinit080/AgriAI/master/Fertilizer%20detection/static/img/dashboard_hero.png" alt="AgriAI Hero" width="800" />
+  
+  # 🌿 AgriAI
 
-An AI-powered farming assistant that provides N-P-K fertilizer dosage predictions, seed quality analysis, live weather integration, and IoT sensor simulation.
+  **AI-Powered Smart Farming Assistant**<br>
+  *A comprehensive platform for crop disease detection, fertilizer prediction, and seed quality analysis.*
 
-## Features
-- **N-P-K Regression Engine** — Multi-output Random Forest predicting exact nutrient dosages (kg/ha)
-- **Linear Programming Cost Optimizer** — Minimizes fertilizer cost using Urea, DAP, MOP
-- **Seed Quality Vision** — CNN with Grad-CAM heatmap overlay for quality grading
-- **XAI / SHAP Plots** — Explains model predictions with feature importance charts
-- **Live Weather Integration** — Open-Meteo API via geolocation
-- **IoT Sensor Simulation** — Mock Arduino/RPi edge device endpoint
-- **Multi-language Support** — English, Hindi, Marathi + Google Translate widget
-- **Role-Based Access Control** — Admin-only API developer portal
+  [![Python](https://img.shields.io/badge/Python-3.12-blue.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org)
+  [![Flask](https://img.shields.io/badge/Flask-3.1.3-green.svg?style=flat-square&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+  [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.21.0-orange.svg?style=flat-square&logo=tensorflow&logoColor=white)](https://tensorflow.org)
+  [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.9.0-yellow.svg?style=flat-square&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
+  [![License](https://img.shields.io/badge/License-MIT-purple.svg?style=flat-square)](LICENSE)
 
-## Requirements
-- Python 3.10+
-- pip
+  [Features](#-key-features) • [Installation](#-installation) • [AI Models](#-ai-models) • [Tech Stack](#-tech-stack) • [Documentation](#-documentation)
+</div>
 
-## Setup
+---
 
-### 1. Clone the repository
+## 🎯 Overview
+
+AgriAI is a full-stack, production-grade web application that brings deep learning and machine learning to the fingertips of farmers, agronomists, and agricultural researchers. The platform integrates three independent AI engines into a single, secure, multi-lingual interface to optimize farm inputs, verify seed quality, and diagnose crop diseases.
+
+## ✨ Key Features
+
+- **🧪 NPK Fertilizer Optimization**: Predicts optimal Nitrogen, Phosphorus, and Potassium requirements and computes the minimum-cost procurement plan using linear programming. Includes SHAP explainability charts.
+- **🌾 Seed Quality Analysis**: Uses an EfficientNetB0 deep learning model to classify seed images into *High*, *Average*, or *Poor* quality tiers. Features Grad-CAM heatmaps for visual explainability.
+- **🍃 Crop Disease Detection**: Employs a fine-tuned MobileNetV2 model capable of identifying 38 distinct crop diseases from leaf images with 96.7% accuracy. Also generates Grad-CAM overlays.
+- **🌍 Multi-Lingual Support**: Accessible in 7 Indian regional languages (English, Hindi, Marathi, Tamil, Telugu, Bengali, Gujarati) via the Google Translate API.
+- **📊 Real-time Dashboard**: Interactive Chart.js analytics for crop yields and fertilizer distribution.
+- **🔐 Secure Authentication**: PBKDF2:SHA256 password hashing, CSRF protection, rate-limiting, and strict Content Security Policies (CSP).
+
+---
+
+## 🧠 AI Models
+
+### 1. Crop Disease Detector
+- **Architecture**: MobileNetV2 (Pre-trained on ImageNet, top 30 layers fine-tuned).
+- **Dataset**: PlantVillage (54,000+ images).
+- **Performance**: 96.7% Validation Accuracy across 38 classes.
+- **Input**: 224x224 RGB image.
+
+### 2. Seed Quality Classifier
+- **Architecture**: EfficientNetB0.
+- **Classes**: 3 tiers (High, Average, Poor) mapped from pure, discolored, broken, and silkcut seeds.
+- **Performance**: 72.3% Validation Accuracy.
+- **Input**: 128x128 RGB image.
+
+### 3. Fertilizer NPK Predictor
+- **Architecture**: Random Forest Regressor inside a Scikit-Learn Pipeline.
+- **Features**: State, Season, Crop, Area, Yield, Rainfall, Temperature, pH, Soil Type.
+- **Output**: Multi-target N, P, K requirements + SHAP Feature Importance.
+
+---
+
+## 💻 Tech Stack
+
+- **Backend**: Flask, SQLAlchemy (SQLite), Flask-Login, Flask-WTF, Flask-Limiter, Flask-Talisman
+- **Machine Learning**: TensorFlow, Keras, scikit-learn, SHAP
+- **Image Processing**: OpenCV (Grad-CAM), Pillow, Matplotlib
+- **Frontend**: HTML5, Vanilla CSS (Dark Mode), Chart.js, Font Awesome
+
+---
+
+## 🚀 Installation
+
+### 1. Clone the Repository
 ```bash
-git clone <your-repo-url>
-cd agri-ai
+git clone https://github.com/Vinit080/AgriAI.git
+cd AgriAI/"Fertilizer detection"
 ```
 
-### 2. Install dependencies
+### 2. Set up the Environment
+Create a virtual environment and install dependencies:
 ```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. Configure environment
-```bash
-cp .env.example .env
-```
-Edit `.env` and set your `FLASK_SECRET_KEY`:
-```bash
-python -c "import secrets; print(secrets.token_hex(32))"
+### 3. Configure Environment Variables
+Create a `.env` file in the root directory based on `.env.example`:
+```ini
+FLASK_SECRET_KEY=your_secure_random_key_here
+FLASK_ENV=development
+DATABASE_URL=sqlite:///farm.db
 ```
 
-### 4. Run the application
+### 4. Run the Application
 ```bash
 python app.py
 ```
+The app will be available at `http://127.0.0.1:5000`.
 
-Visit: `http://127.0.0.1:5000`
+---
 
-## Environment Variables
+## 📚 Documentation
 
-| Variable | Required | Description |
-|---|---|---|
-| `FLASK_SECRET_KEY` | ✅ Yes | Cryptographically secure random key for session signing |
-| `DATABASE_URL` | ❌ No | SQLite by default: `sqlite:///farm.db` |
-| `FLASK_ENV` | ❌ No | Set to `development` to enable debug mode |
+For a deep dive into the system architecture, use cases, API references, and security models, please check out the official **Technical Report**:
 
-## Admin Access
-To access the Developer API Portal (`/api/docs`), you need an account with `is_admin = True`.  
-Set this manually via a database migration or Flask shell:
-```python
-flask shell
->>> from src.models import db, User
->>> u = User.query.filter_by(username='your_username').first()
->>> u.is_admin = True
->>> db.session.commit()
-```
+👉 [**AgriAI Technical Report (HTML)**](AgriAI_Technical_Report.html)  
+👉 [**AgriAI Technical Report (PDF)**](AgriAI_Technical_Report.pdf)
 
-## API Endpoints
+---
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/health` | No | Health check |
-| POST | `/api/v1/predict/fertilizer` | Yes | N-P-K prediction |
-| POST | `/api/v1/predict/seed` | Yes | Seed quality classification |
-| GET | `/api/v1/sensors/read` | Yes | IoT sensor simulation |
-| GET | `/api/stats` | No | Crop/fertilizer analytics |
-| GET | `/api/docs` | Admin | Developer documentation |
-
-## Security
-- CSRF protection on all forms (Flask-WTF)
-- Rate limiting: 10 login attempts/minute, 20 predictions/hour
-- 5MB file upload limit with extension whitelist (JPG, PNG, WEBP)
-- Secrets loaded from `.env`, never hardcoded
-- All errors return generic messages to client; full detail logged server-side
+<div align="center">
+  <p>Built with ❤️ for sustainable agriculture.</p>
+</div>
