@@ -1,0 +1,37 @@
+# === SECRETS & ENVIRONMENT — NEVER COMMIT ===
+.env
+*.json
+
+# === PYTHON ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# === ML MODEL ARTIFACTS (large binary files) ===
+*.h5
+*.joblib
+*.pkl
+
+# === DATABASE ===
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# === DATA / TESTING ARTIFACTS ===
+testing_set/
+crop_Model1.joblib
+Testing.csv
+PlantVillage-Dataset/
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === IDE ===
+.vscode/
+.idea/

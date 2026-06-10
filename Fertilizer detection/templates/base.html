@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AgriAI - Smart Farming Assistant{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF and html2canvas removed — using native window.print() instead -->
+    {% block head %}{% endblock %}
+    <style>
+        /* Hide Google Logo & Banner entirely */
+        #google_translate_element { 
+            position: absolute !important;
+            z-index: -1 !important;
+            opacity: 0 !important;
+            width: 1px !important;
+            height: 1px !important;
+            overflow: hidden !important;
+        }
+        .goog-te-banner-frame { display: none !important; }
+        body { top: 0px !important; }
+        .skiptranslate { display: none !important; }
+
+        /* Custom Premium Translation Dropdown */
+        .custom-translate {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px; padding: 0 16px;
+            transition: all 0.3s ease;
+        }
+        .custom-translate:hover {
+            border-color: #10b981; background: rgba(0, 0, 0, 0.6);
+        }
+        .custom-translate select {
+            background: transparent; border: none; color: white;
+            padding: 10px 0; font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px; font-weight: 600; cursor: pointer; outline: none;
+            appearance: none; -webkit-appearance: none; -moz-appearance: none;
+        }
+        .custom-translate select option {
+            background-color: #1a1c23; color: #f3f4f6;
+        }
+
+        /* --- NATIVE BROWSER PDF EXPORT (100% RELIABLE) --- */
+        @media print {
+            body { 
+                background: white !important; 
+                color: black !important; 
+            }
+            /* Hide UI Elements */
+            .sidebar, .topbar, .form-card, .upload-card, #downloadPdfBtn, .custom-translate, .welcome-card, .features-grid { 
+                display: none !important; 
+            }
+            .main-content { 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                width: 100% !important;
+            }
+            .content { padding: 0 !important; }
+            /* Style the Report for A4 Paper */
+            .card.result-card { 
+                background: white !important; 
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                border: 2px solid #ddd !important; 
+                box-shadow: none !important; 
+                color: black !important; 
+                margin: 0 !important;
+                padding: 40px !important;
+                overflow: visible !important;
+            }
+            /* Override text colors to be visible on white paper */
+            .card.result-card *, h3, h4, p, strong, span, .label, .value { 
+                color: black !important; 
+                text-shadow: none !important;
+                -webkit-text-fill-color: black !important;
+                background-clip: border-box !important;
+                -webkit-background-clip: border-box !important;
+            }
+            .prediction-box { border-bottom: 2px solid #eee !important; }
+            .prediction-icon { background: #f0f0f0 !important; border: 1px solid #ccc !important; box-shadow: none !important; color: #333 !important; }
+            #gradcamContainer, #shapContainer { background: #fafafa !important; border: 1px solid #ccc !important; }
+            .progress { background: #eee !important; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1) !important; }
+            .progress-fill { background: #10b981 !important; box-shadow: none !important; }
+            img { max-width: 100% !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-leaf"></i>
+                <span>AgriAI</span>
+            </div>
+            
+            <ul class="nav-links">
+                <li>
+                    <a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}active{% endif %}">
+                        <i class="fa-solid fa-house"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('fertilizer') }}" class="{% if request.endpoint == 'fertilizer' %}active{% endif %}">
+                        <i class="fa-solid fa-flask"></i> Fertilizer Detection
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('seed') }}" class="{% if request.endpoint == 'seed' %}active{% endif %}">
+                        <i class="fa-solid fa-seedling"></i> Seed Quality
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('disease') }}" class="{% if request.endpoint == 'disease' %}active{% endif %}">
+                        <i class="fa-solid fa-leaf"></i> Field Disease
+                    </a>
+                </li>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <li>
+                    <a href="{{ url_for('api_docs') }}" class="{% if request.endpoint == 'api_docs' %}active{% endif %}">
+                        <i class="fa-solid fa-code"></i> API Docs
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            
+            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                {% if current_user.is_authenticated %}
+                    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px; text-align: center;">
+                        <i class="fa-solid fa-user"></i> Logged in as <strong>{{ current_user.username }}</strong>
+                    </p>
+                    <a href="{{ url_for('logout') }}" class="btn" style="width: 100%; display: block; text-align: center; background: rgba(255,255,255,0.1); color: white; padding: 10px;">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary" style="width: 100%; display: block; text-align: center; margin-bottom: 10px; padding: 10px;">Login</a>
+                    <a href="{{ url_for('register') }}" class="btn" style="width: 100%; display: block; text-align: center; background: rgba(255,255,255,0.1); color: white; padding: 10px;">Register</a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">
+                    <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+                
+                <div class="user-profile" style="display: flex; align-items: center; gap: 20px;">
+                    <!-- Hidden Google Translate Widget -->
+                    <div id="google_translate_element"></div>
+                    
+                    <!-- Native Custom Dropdown -->
+                    <div class="custom-translate">
+                        <i class="fa-solid fa-language" style="color: var(--accent-green-light);"></i>
+                        <select id="customTranslateSelect" onchange="triggerGoogleTranslate(this.value)">
+                            <option value="en">English</option>
+                            <option value="hi">हिंदी (Hindi)</option>
+                            <option value="mr">मराठी (Marathi)</option>
+                            <option value="ta">தமிழ் (Tamil)</option>
+                            <option value="te">తెలుగు (Telugu)</option>
+                            <option value="bn">বাংলা (Bengali)</option>
+                            <option value="gu">ગુજરાતી (Gujarati)</option>
+                        </select>
+                    </div>
+                    
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('profile') }}" title="My Profile" style="color: white; text-decoration: none;">
+                            <div class="avatar" style="background: var(--primary); color: white;">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" title="Login" style="color: white; text-decoration: none;">
+                            <div class="avatar">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                        </a>
+                    {% endif %}
+                </div>
+            </header>
+
+            <div class="content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    {% block scripts %}{% endblock %}
+    
+    <!-- Google Translate Script -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en', 
+                includedLanguages: 'en,hi,mr,ta,te,bn,gu',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+
+        // Custom function to trigger hidden Google Translate dropdown
+        function triggerGoogleTranslate(langCode) {
+            // Clear existing cookies to ensure no conflicts
+            document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=" + window.location.hostname + "; path=/;";
+            document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=." + window.location.hostname + "; path=/;";
+
+            if (langCode !== 'en') {
+                // Set cookies for Google Translate to pick up on reload
+                document.cookie = "googtrans=/en/" + langCode + "; path=/;";
+                document.cookie = "googtrans=/en/" + langCode + "; domain=" + window.location.hostname + "; path=/;";
+                document.cookie = "googtrans=/en/" + langCode + "; domain=." + window.location.hostname + "; path=/;";
+            }
+
+            // Reload the page to apply the translation natively
+            window.location.reload();
+        }
+
+        // Set the custom dropdown to match the active translation on page load
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                const match = document.cookie.match(/googtrans=\/en\/([a-z]{2})/);
+                if (match && match[1]) {
+                    const customSelect = document.getElementById('customTranslateSelect');
+                    if (customSelect) customSelect.value = match[1];
+                }
+            }, 100);
+        });
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

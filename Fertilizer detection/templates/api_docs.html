@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}AgriAI - REST API Documentation{% endblock %}
+{% block page_title %}API Documentation{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <div class="card welcome-card" style="padding: 40px;">
+        <div class="card-content">
+            <h2><i class="fa-solid fa-code"></i> Developer API Portal</h2>
+            <p>Integrate the AgriAI predictive engine directly into your external software applications using our enterprise RESTful endpoints.</p>
+        </div>
+    </div>
+
+    <!-- Endpoint 1: Fertilizer Predict -->
+    <div class="card" style="padding: 30px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <span style="background: var(--accent-green-main); color: white; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 14px;">POST</span>
+            <h3 style="font-family: monospace; font-size: 20px; color: var(--text-primary);">/api/v1/predict/fertilizer</h3>
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">Calculates exact N-P-K nutrient requirements and returns an optimized linear-programming shopping list.</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+            <div>
+                <h4 style="color: var(--text-primary); margin-bottom: 10px; font-size: 14px; text-transform: uppercase;">Request Body (JSON)</h4>
+                <pre style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; font-family: monospace; font-size: 13px; color: var(--accent-green-light); border: 1px solid rgba(255,255,255,0.1); overflow-x: auto;">
+{
+  "State": "Maharashtra",
+  "Year": 2023,
+  "Season": "Kharif",
+  "Crop": "Rice",
+  "Area": 100,
+  "Production": 150,
+  "Rainfall": 1200.5,
+  "avg_temp": 25.4,
+  "PH_Value_of_Soil": 6.5,
+  "Type_of_soil": "Clayey soil",
+  "Language": "en",
+  "heavy_rain": false
+}</pre>
+            </div>
+            <div>
+                <h4 style="color: var(--text-primary); margin-bottom: 10px; font-size: 14px; text-transform: uppercase;">Response (200 OK)</h4>
+                <pre style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; font-family: monospace; font-size: 13px; color: #60a5fa; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto;">
+{
+  "prediction": "N: 45.2 kg/ha | P: 20.1 kg/ha | K: 15.5 kg/ha",
+  "reasoning": "Nitrogen: 45.2 kg/ha...",
+  "practices": "Ensure even distribution...",
+  "shap_plot_url": "/static/img/shap_plot.png"
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Endpoint 2: Sensor Mock -->
+    <div class="card" style="padding: 30px;">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <span style="background: var(--accent-blue); color: white; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 14px;">GET</span>
+            <h3 style="font-family: monospace; font-size: 20px; color: var(--text-primary);">/api/v1/sensors/read</h3>
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">Simulates an edge-device hardware ping, returning real-time environmental metrics for the given field.</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+            <div>
+                <h4 style="color: var(--text-primary); margin-bottom: 10px; font-size: 14px; text-transform: uppercase;">Request</h4>
+                <pre style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; font-family: monospace; font-size: 13px; color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.1); overflow-x: auto;">
+No parameters required.</pre>
+            </div>
+            <div>
+                <h4 style="color: var(--text-primary); margin-bottom: 10px; font-size: 14px; text-transform: uppercase;">Response (200 OK)</h4>
+                <pre style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; font-family: monospace; font-size: 13px; color: #60a5fa; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto;">
+{
+  "ph": 6.8,
+  "rainfall": 850.2,
+  "soil_type": "Loamy soil",
+  "temp": 28.5
+}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

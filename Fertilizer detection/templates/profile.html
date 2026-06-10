@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}My Profile - AgriAI{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <div class="welcome-card" style="padding: 40px; justify-content: flex-start; gap: 30px; background-image: linear-gradient(to right, rgba(15, 17, 21, 0.95), rgba(15, 17, 21, 0.8));">
+        <div class="avatar" style="width: 100px; height: 100px; font-size: 40px; flex-shrink: 0;">
+            <i class="fa-solid fa-user"></i>
+        </div>
+        <div>
+            <h2 style="margin-bottom: 5px;">{{ current_user.username }}</h2>
+            <p style="color: var(--accent-green-light); font-weight: bold;">Registered Farmer</p>
+        </div>
+    </div>
+
+    <div class="card" style="padding: 40px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h3 style="font-size: 24px;"><i class="fa-solid fa-clock-rotate-left"></i> My AI Prediction History</h3>
+        </div>
+
+        {% if history %}
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                {% for item in history %}
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                {% if item.prediction_type == 'Fertilizer' %}
+                                    <span style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;"><i class="fa-solid fa-flask"></i> Fertilizer</span>
+                                {% elif item.prediction_type == 'Disease' %}
+                                    <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;"><i class="fa-solid fa-leaf"></i> Field Disease</span>
+                                {% else %}
+                                    <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;"><i class="fa-solid fa-seedling"></i> Seed Quality</span>
+                                {% endif %}
+                                <span style="color: var(--text-muted); font-size: 13px;"><i class="fa-solid fa-calendar"></i> {{ item.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 14px; max-width: 500px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <strong>Input Data:</strong> {{ item.input_data }}
+                            </p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="display: block; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">AI Result</span>
+                            <strong style="color: var(--text-primary); font-size: 18px;">{{ item.result }}</strong>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 40px; background: rgba(0,0,0,0.2); border-radius: 12px;">
+                <i class="fa-solid fa-folder-open" style="font-size: 48px; color: var(--text-muted); margin-bottom: 15px;"></i>
+                <h4 style="color: var(--text-secondary);">No history found</h4>
+                <p style="color: var(--text-muted); font-size: 14px; margin-top: 5px;">Your AI predictions will be saved here automatically.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
