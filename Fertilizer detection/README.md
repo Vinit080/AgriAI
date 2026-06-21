@@ -67,7 +67,7 @@ AgriAI is a full-stack, production-grade web application that brings deep learni
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/Vinit080/AgriAI.git
-cd AgriAI/"Fertilizer detection"
+cd AgriAI/"Fertilizer detection"/backend
 ```
 
 ### 2. Set up the Environment
@@ -79,7 +79,7 @@ pip install -r requirements.txt
 ```
 
 ### 3. Configure Environment Variables
-Create a `.env` file in the root directory based on `.env.example`:
+Create a `.env` file in the `backend` directory based on `.env.example`:
 ```ini
 FLASK_SECRET_KEY=your_secure_random_key_here
 FLASK_ENV=development
@@ -88,7 +88,6 @@ DATABASE_URL=sqlite:///farm.db
 
 ### 4. Run the Application
 ```bash
-cd backend
 python app.py
 ```
 The app will be available at `http://127.0.0.1:5000`.
