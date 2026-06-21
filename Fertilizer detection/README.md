@@ -88,6 +88,7 @@ DATABASE_URL=sqlite:///farm.db
 
 ### 4. Run the Application
 ```bash
+cd backend
 python app.py
 ```
 The app will be available at `http://127.0.0.1:5000`.
@@ -98,8 +99,8 @@ The app will be available at `http://127.0.0.1:5000`.
 
 For a deep dive into the system architecture, use cases, API references, and security models, please check out the official **Technical Report**:
 
-👉 [**AgriAI Technical Report (HTML)**](AgriAI_Technical_Report.html)  
-👉 [**AgriAI Technical Report (PDF)**](AgriAI_Technical_Report.pdf)
+👉 [**AgriAI Technical Report (HTML)**](other%20files/AgriAI_Technical_Report.html)  
+👉 [**AgriAI Technical Report (PDF)**](other%20files/AgriAI_Technical_Report.pdf)
 
 ---
 
